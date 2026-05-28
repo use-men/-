@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:9.4
+    container_name: rollcall-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root123}
+      MYSQL_DATABASE: ${DB_NAME:-roll_call}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - rollcall-net
+
+  backend:
+    build: ./server
+    container_name: rollcall-backend
+    restart: always
+    environment:
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD:-root123}
+      DB_NAME: ${DB_NAME:-roll_call}
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      - mysql
+    networks:
+      - rollcall-net
+
+  frontend:
+    build: ./AIvite
+    container_name: rollcall-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - rollcall-net
+
+volumes:
+  mysql-data:
+
+networks:
+  rollcall-net:
+    driver: bridge
